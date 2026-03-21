@@ -15,7 +15,26 @@ preguntas = [
     {"texto": "¿La encuesta es una técnica de recolección de datos? (V/F)", "respuesta": "V"},
     {"texto": "¿Una variable constante cambia durante el estudio? (V/F)", "respuesta": "F"}
 ]
+import os
+from telegram.ext import Updater, CommandHandler
 
+# Leer el token desde las variables de entorno
+TOKEN = os.environ["BOT_TOKEN"]
+
+# Crear el updater con el token
+updater = Updater(token=TOKEN)
+
+dispatcher = updater.dispatcher
+
+# Ejemplo de comando /start
+def start(update, context):
+    update.message.reply_text("¡Hola! Soy tu bot de preguntas verdadero/falso.")
+
+dispatcher.add_handler(CommandHandler("start", start))
+
+# Iniciar el bot con polling
+updater.start_polling()
+updater.idle()
 usuarios = {}
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
