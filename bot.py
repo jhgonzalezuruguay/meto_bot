@@ -1,6 +1,9 @@
+import os
+import random
 from telegram import Update
-from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, filters, ContextTypes
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
+# Lista de preguntas verdadero/falso
 preguntas = [
     {"texto": "¿Una hipótesis relaciona variables? (V/F)", "respuesta": "V"},
     {"texto": "¿La variable independiente es la causa? (V/F)", "respuesta": "V"},
@@ -15,26 +18,28 @@ preguntas = [
     {"texto": "¿La encuesta es una técnica de recolección de datos? (V/F)", "respuesta": "V"},
     {"texto": "¿Una variable constante cambia durante el estudio? (V/F)", "respuesta": "F"}
 ]
-import os
-from telegram.ext import Updater, CommandHandler
 
 # Leer el token desde las variables de entorno
 TOKEN = os.environ["BOT_TOKEN"]
 
-# Crear el updater con el token
-updater = Updater(token=TOKEN)
+# Crear la aplicación
+app = ApplicationBuilder().token(TOKEN).build()
 
-dispatcher = updater.dispatcher
+# Comando /start
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("¡Hola! Soy tu bot de preguntas verdadero/falso. Escribí /pregunta para practicar.")
 
-# Ejemplo de comando /start
-def start(update, context):
-    update.message.reply_text("¡Hola! Soy tu bot de preguntas verdadero/falso.")
+# Comando /pregunta
+async def pregunta(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    q = random.choice(preguntas)
+    await update.message.reply_text(q["texto"])
 
-dispatcher.add_handler(CommandHandler("start", start))
+# Registrar handlers
+app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("pregunta", pregunta))
 
 # Iniciar el bot con polling
-updater.start_polling()
-updater.idle()
+app.run_polling()
 usuarios = {}
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
