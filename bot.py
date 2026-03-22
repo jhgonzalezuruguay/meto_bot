@@ -84,8 +84,13 @@ def run_flask():
     port = int(os.environ.get("PORT", 5000))
     flask_app.run(host="0.0.0.0", port=port)
 
+import asyncio
+
 if __name__ == "__main__":
     # Flask en un hilo separado
     threading.Thread(target=run_flask).start()
-    # Bot en el hilo principal
+
+    # Crear un loop explícito para el bot
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     bot_app.run_polling()
