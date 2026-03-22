@@ -1,9 +1,11 @@
 import os
 import random
+import threading
+from flask import Flask
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
-# Lista de preguntas verdadero/falso gil
+# Lista de preguntas verdadero/falso
 preguntas = [
     {"texto": "¿Una hipótesis relaciona variables? (V/F)", "respuesta": "V"},
     {"texto": "¿La variable independiente es la causa? (V/F)", "respuesta": "V"},
@@ -25,8 +27,8 @@ usuarios = {}
 # Leer el token desde las variables de entorno
 TOKEN = os.environ["BOT_TOKEN"]
 
-# Crear la aplicación
-app = ApplicationBuilder().token(TOKEN).build()
+# Crear la aplicación de Telegram
+bot_app = ApplicationBuilder().token(TOKEN).build()
 
 # Comando /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -52,7 +54,7 @@ async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("❌ Incorrecto")
 
-    # Guardar en CSV
+    # Guardar en CSV (no persistente en Render)
     with open("respuestas.csv", "a") as f:
         f.write(f"{user_id},{i},{texto},{usuarios[user_id]['correctas']}\n")
 
@@ -67,8 +69,22 @@ async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"🎉 Terminaste. Puntaje: {porcentaje:.0f}%")
 
 # Registrar handlers
-app.add_handler(CommandHandler("start", start))
-app.add_handler(MessageHandler(filters.TEXT, responder))
+bot_app.add_handler(CommandHandler("start", start))
+bot_app.add_handler(MessageHandler(filters.TEXT, responder))
 
-# Iniciar el bot con polling
-app.run_polling()
+# --- Flask para Render ---
+flask_app = Flask(__name__)
+
+@flask_app.route("/")
+def home():
+    return "Bot de preguntas V/F está corriendo en Render."
+
+def run_bot():
+    bot_app.run_polling()
+
+if __name__ == "__main__":
+    # Correr el bot en un hilo separado
+    threading.Thread(target=run_bot).start()
+    # Levantar Flask en el puerto que Render asigna
+    port = int(os.environ.get("PORT", 5000))
+    flask_app.run(host="0.0.0.0", port=port)
