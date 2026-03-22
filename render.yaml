@@ -3,7 +3,7 @@ services:
     name: meto_bot
     env: python
     plan: free
-    # No hace falta fijar runtime, porque la alpha soporta Python 3.14
+    # No hace falta fijar runtime, la 21.x soporta Python 3.14
     buildCommand: "pip install --upgrade pip setuptools wheel && pip install --no-cache-dir -r requirements.txt"
     startCommand: "python bot.py"
     envVars:
