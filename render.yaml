@@ -3,8 +3,8 @@ services:
     name: meto_bot
     env: python
     plan: free
-    buildCommand: "pip install -r requirements.txt"
+    buildCommand: "pip install --upgrade pip setuptools wheel && pip install --no-cache-dir -r requirements.txt"
     startCommand: "python bot.py"
     envVars:
       - key: BOT_TOKEN
-        sync: false   # lo configurás en el panel de Render con tu token real
+        sync: false   # cargás el valor real en el panel de Render
