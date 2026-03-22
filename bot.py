@@ -1,7 +1,7 @@
 import os
 import random
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
 # Lista de preguntas verdadero/falso
 preguntas = [
@@ -19,6 +19,9 @@ preguntas = [
     {"texto": "¿Una variable constante cambia durante el estudio? (V/F)", "respuesta": "F"}
 ]
 
+# Diccionario para guardar progreso de cada usuario
+usuarios = {}
+
 # Leer el token desde las variables de entorno
 TOKEN = os.environ["BOT_TOKEN"]
 
@@ -27,52 +30,34 @@ app = ApplicationBuilder().token(TOKEN).build()
 
 # Comando /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("¡Hola! Soy tu bot de preguntas verdadero/falso. Escribí /pregunta para practicar.")
-
-# Comando /pregunta
-async def pregunta(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    q = random.choice(preguntas)
-    await update.message.reply_text(q["texto"])
-
-# Registrar handlers
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("pregunta", pregunta))
-
-# Iniciar el bot con polling
-app.run_polling()
-usuarios = {}
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     usuarios[user_id] = {"indice": 0, "correctas": 0}
     await update.message.reply_text(preguntas[0]["texto"])
 
+# Handler para respuestas de texto
 async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     texto = update.message.text.strip().upper()
+
     if user_id not in usuarios:
         usuarios[user_id] = {"indice": 0, "correctas": 0}
         await update.message.reply_text(preguntas[0]["texto"])
         return
 
     i = usuarios[user_id]["indice"]
-    
-    if user_id not in usuarios:
-        usuarios[user_id] = {"indice": 0, "correctas": 0}
 
-        i = usuarios[user_id]["indice"]
-    
     if texto == preguntas[i]["respuesta"]:
         await update.message.reply_text("✅ Correcto")
         usuarios[user_id]["correctas"] += 1
     else:
         await update.message.reply_text("❌ Incorrecto")
 
+    # Guardar en CSV
     with open("respuestas.csv", "a") as f:
-        f.write(f"{user_id},{i},{texto},{usuarios[user_id]['correctas']}\n")    
+        f.write(f"{user_id},{i},{texto},{usuarios[user_id]['correctas']}\n")
 
-        usuarios[user_id]["indice"] += 1
-    
+    usuarios[user_id]["indice"] += 1
+
     if usuarios[user_id]["indice"] < len(preguntas):
         await update.message.reply_text(preguntas[usuarios[user_id]["indice"]]["texto"])
     else:
@@ -81,9 +66,9 @@ async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
         porcentaje = (correctas / total) * 100
         await update.message.reply_text(f"🎉 Terminaste. Puntaje: {porcentaje:.0f}%")
 
-app = ApplicationBuilder().token("8718846892:AAHbAHqlidrT5_AIPji_tcvJtuE6HRpYiF0").build()
-
+# Registrar handlers
 app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT, responder))
 
+# Iniciar el bot con polling
 app.run_polling()
