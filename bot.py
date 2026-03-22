@@ -35,6 +35,12 @@ bot_app = ApplicationBuilder().token(TOKEN).build()
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     usuarios[user_id] = {"indice": 0, "correctas": 0}
+    # Mensaje de bienvenida
+    await update.message.reply_text(
+        "👋 ¡Hola! Bienvenido al bot de preguntas V/F.\n"
+        "Te propongo responder un breve cuestionario para poner a prueba tus conocimientos."
+    )
+    # Primera pregunta
     await update.message.reply_text(preguntas[0]["texto"])
 
 # Handler para respuestas de texto
