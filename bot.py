@@ -84,11 +84,8 @@ def run_flask():
     port = int(os.environ.get("PORT", 5000))
     flask_app.run(host="0.0.0.0", port=port)
 
-async def main():
-    await bot_app.run_polling()
-
 if __name__ == "__main__":
     # Flask en un hilo separado
     threading.Thread(target=run_flask).start()
-    # Bot en el hilo principal con asyncio
-    asyncio.run(main())
+    # Bot en el hilo principal
+    bot_app.run_polling()
