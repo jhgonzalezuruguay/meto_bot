@@ -3,7 +3,7 @@ import random
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
-# Lista de preguntas verdadero/falso
+# Lista de preguntas verdadero/falso gil
 preguntas = [
     {"texto": "¿Una hipótesis relaciona variables? (V/F)", "respuesta": "V"},
     {"texto": "¿La variable independiente es la causa? (V/F)", "respuesta": "V"},
