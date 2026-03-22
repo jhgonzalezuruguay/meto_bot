@@ -1,9 +1,10 @@
 services:
-  - type: worker
-    name: telegram-bot
+  - type: web
+    name: meto_bot
     env: python
+    plan: free
     buildCommand: "pip install -r requirements.txt"
     startCommand: "python bot.py"
     envVars:
       - key: BOT_TOKEN
-        sync: false
+        sync: false   # lo configurás en el panel de Render con tu token real
