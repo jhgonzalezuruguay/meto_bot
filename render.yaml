@@ -8,4 +8,4 @@ services:
     startCommand: "python bot.py"
     envVars:
       - key: BOT_TOKEN
-        sync: false   # cargás el valor real en el panel de Render
+        sync: false
