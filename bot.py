@@ -1,6 +1,7 @@
 import os
 import random
 import threading
+import asyncio
 from flask import Flask
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
@@ -79,12 +80,15 @@ flask_app = Flask(__name__)
 def home():
     return "Bot de preguntas V/F está corriendo en Render."
 
-def run_bot():
-    bot_app.run_polling()
-
-if __name__ == "__main__":
-    # Correr el bot en un hilo separado
-    threading.Thread(target=run_bot).start()
-    # Levantar Flask en el puerto que Render asigna
+def run_flask():
     port = int(os.environ.get("PORT", 5000))
     flask_app.run(host="0.0.0.0", port=port)
+
+async def main():
+    await bot_app.run_polling()
+
+if __name__ == "__main__":
+    # Flask en un hilo separado
+    threading.Thread(target=run_flask).start()
+    # Bot en el hilo principal con asyncio
+    asyncio.run(main())
