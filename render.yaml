@@ -3,7 +3,7 @@ services:
     name: meto_bot
     env: python
     plan: free
-    buildCommand: "pip install --upgrade pip setuptools wheel && pip install --no-cache-dir -r requirements.txt"
+    buildCommand: "pip install --upgrade pip setuptools wheel && pip install --no-cache-dir --force-reinstall python-telegram-bot==20.7 Flask==3.0.2"
     startCommand: "python bot.py"
     envVars:
       - key: BOT_TOKEN
