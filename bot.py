@@ -78,8 +78,13 @@ flask_app = Flask(__name__)
 def home():
     return "Bot de preguntas V/F está corriendo en Render con Webhook."
 
+import asyncio
+
 if __name__ == "__main__":
-    # Configurar webhook
+    # Configurar webhook con loop explícito
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
     bot_app.run_webhook(
         listen="0.0.0.0",
         port=PORT,
