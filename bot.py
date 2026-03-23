@@ -1,7 +1,4 @@
 import os
-import random
-import threading
-import asyncio
 from flask import Flask
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
@@ -22,28 +19,25 @@ preguntas = [
     {"texto": "¿Una variable constante cambia durante el estudio? (V/F)", "respuesta": "F"}
 ]
 
-# Diccionario para guardar progreso de cada usuario
 usuarios = {}
 
-# Leer el token desde las variables de entorno
 TOKEN = os.environ["BOT_TOKEN"]
+PORT = int(os.environ.get("PORT", 5000))
+RENDER_URL = os.environ.get("RENDER_EXTERNAL_URL")  # Render te da esta variable automáticamente
 
-# Crear la aplicación de Telegram
 bot_app = ApplicationBuilder().token(TOKEN).build()
 
 # Comando /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     usuarios[user_id] = {"indice": 0, "correctas": 0}
-    # Mensaje de bienvenida
     await update.message.reply_text(
         "👋 ¡Hola! Bienvenido al bot de preguntas V/F.\n"
         "Te propongo responder un breve cuestionario para poner a prueba tus conocimientos."
     )
-    # Primera pregunta
     await update.message.reply_text(preguntas[0]["texto"])
 
-# Handler para respuestas de texto
+# Handler para respuestas
 async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     texto = update.message.text.strip().upper()
@@ -61,10 +55,6 @@ async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("❌ Incorrecto")
 
-    # Guardar en CSV (no persistente en Render)
-    with open("respuestas.csv", "a") as f:
-        f.write(f"{user_id},{i},{texto},{usuarios[user_id]['correctas']}\n")
-
     usuarios[user_id]["indice"] += 1
 
     if usuarios[user_id]["indice"] < len(preguntas):
@@ -73,7 +63,9 @@ async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
         correctas = usuarios[user_id]["correctas"]
         total = len(preguntas)
         porcentaje = (correctas / total) * 100
-        await update.message.reply_text(f"🎉 Terminaste. Puntaje: {porcentaje:.0f}%")
+        await update.message.reply_text(
+            f"🎉 Terminaste. Puntaje: {porcentaje:.0f}%\nGracias por participar, ¡hasta la próxima!"
+        )
 
 # Registrar handlers
 bot_app.add_handler(CommandHandler("start", start))
@@ -84,19 +76,13 @@ flask_app = Flask(__name__)
 
 @flask_app.route("/")
 def home():
-    return "Bot de preguntas V/F está corriendo en Render."
-
-def run_flask():
-    port = int(os.environ.get("PORT", 5000))
-    flask_app.run(host="0.0.0.0", port=port)
-
-import asyncio
+    return "Bot de preguntas V/F está corriendo en Render con Webhook."
 
 if __name__ == "__main__":
-    # Flask en un hilo separado
-    threading.Thread(target=run_flask).start()
-
-    # Crear un loop explícito para el bot
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    bot_app.run_polling()
+    # Configurar webhook
+    bot_app.run_webhook(
+        listen="0.0.0.0",
+        port=PORT,
+        url_path=TOKEN,
+        webhook_url=f"{RENDER_URL}/{TOKEN}"
+    )
