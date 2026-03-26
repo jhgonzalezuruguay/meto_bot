@@ -119,12 +119,4 @@ def home():
     return "Bot de preguntas V/F con Hugging Face está corriendo en Render."
 
 if __name__ == "__main__":
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
-    bot_app.run_webhook(
-        listen="0.0.0.0",
-        port=PORT,
-        url_path=TOKEN,
-        webhook_url=f"{RENDER_URL}/{TOKEN}"
-    )
+    flask_app.run(host="0.0.0.0", port=PORT)
