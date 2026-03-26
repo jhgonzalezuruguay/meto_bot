@@ -111,7 +111,7 @@ flask_app = Flask(__name__)
 @flask_app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), bot_app.bot)
-    # Ejecuta la corutina en el loop del bot
+    # Procesa la actualización en el loop del bot
     bot_app.loop.create_task(bot_app.process_update(update))
     return "ok"
 
