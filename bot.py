@@ -26,7 +26,7 @@ usuarios = {}
 # --- Variables de entorno ---
 TOKEN = os.environ["BOT_TOKEN"]
 PORT = int(os.environ.get("PORT", 5000))
-RENDER_URL = os.environ.get("RENDER_EXTERNAL_URL")  # Render la provee automáticamente
+RENDER_URL = os.environ.get("RENDER_EXTERNAL_URL")
 HF_API_KEY = os.environ.get("HF_API_KEY")
 
 bot_app = ApplicationBuilder().token(TOKEN).build()
@@ -108,7 +108,7 @@ bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, responder))
 # --- Flask para Render ---
 flask_app = Flask(__name__)
 
-@flask_app.route("/", methods=["POST"])
+@flask_app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), bot_app.bot)
     bot_app.update_queue.put(update)
