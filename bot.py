@@ -1,6 +1,5 @@
 import os
 import requests
-import asyncio
 from flask import Flask, request
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
@@ -25,8 +24,6 @@ usuarios = {}
 
 # --- Variables de entorno ---
 TOKEN = os.environ["BOT_TOKEN"]
-PORT = int(os.environ.get("PORT", 5000))
-RENDER_URL = os.environ.get("RENDER_EXTERNAL_URL")
 HF_API_KEY = os.environ.get("HF_API_KEY")
 
 bot_app = ApplicationBuilder().token(TOKEN).build()
@@ -43,8 +40,6 @@ def chat_gpt(prompt: str) -> str:
     except Exception:
         return "⚠️ Error: respuesta inválida de Hugging Face"
 
-    print("Respuesta HuggingFace:", data)
-
     if isinstance(data, list) and "generated_text" in data[0]:
         return data[0]["generated_text"]
     elif isinstance(data, dict) and "generated_text" in data:
@@ -58,10 +53,7 @@ def chat_gpt(prompt: str) -> str:
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     usuarios[user_id] = {"indice": 0, "correctas": 0, "modo_chatgpt": False}
-    await update.message.reply_text(
-        "👋 ¡Hola! Bienvenido al bot de preguntas V/F.\n"
-        "Te propongo responder un breve cuestionario para poner a prueba tus conocimientos."
-    )
+    await update.message.reply_text("👋 ¡Hola! Bienvenido al bot de preguntas V/F.")
     await update.message.reply_text(preguntas[0]["texto"])
 
 # --- Handler de respuestas ---
@@ -111,13 +103,9 @@ flask_app = Flask(__name__)
 @flask_app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), bot_app.bot)
-    # Procesa la actualización en el loop del bot
     bot_app.loop.create_task(bot_app.process_update(update))
     return "ok"
 
 @flask_app.route("/")
 def home():
     return "Bot de preguntas V/F con Hugging Face está corriendo en Render."
-
-if __name__ == "__main__":
-    flask_app.run(host="0.0.0.0", port=PORT)
