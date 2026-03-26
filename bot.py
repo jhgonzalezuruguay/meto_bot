@@ -38,7 +38,7 @@ def chat_gpt(prompt: str) -> str:
         json={"inputs": prompt}
     )
     data = response.json()
-    print("Respuesta HuggingFace:", data)  # Ver en logs
+    print("Respuesta HuggingFace:", data)
 
     if isinstance(data, list) and "generated_text" in data[0]:
         return data[0]["generated_text"]
