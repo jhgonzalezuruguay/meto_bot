@@ -1,11 +1,12 @@
 services:
   - type: web
-    name: meto_bot
+    name: meto-bot
     env: python
     plan: free
-    # No hace falta fijar runtime, la 21.x soporta Python 3.14
-    buildCommand: "pip install --upgrade pip setuptools wheel && pip install --no-cache-dir -r requirements.txt"
-    startCommand: "python bot.py"
+    buildCommand: pip install --upgrade pip setuptools wheel && pip install -r requirements.txt
+    startCommand: python bot.py
     envVars:
       - key: BOT_TOKEN
+        sync: false
+      - key: HF_API_KEY
         sync: false
