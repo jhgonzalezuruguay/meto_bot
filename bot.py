@@ -1,4 +1,6 @@
 import os
+import requests
+import asyncio
 from flask import Flask
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
@@ -24,26 +26,47 @@ usuarios = {}
 TOKEN = os.environ["BOT_TOKEN"]
 PORT = int(os.environ.get("PORT", 5000))
 RENDER_URL = os.environ.get("RENDER_EXTERNAL_URL")  # Render te da esta variable automáticamente
+HF_API_KEY = os.environ.get("HF_API_KEY")  # Hugging Face API Key
 
 bot_app = ApplicationBuilder().token(TOKEN).build()
 
-# Comando /start
+# --- Función para consultar Hugging Face ---
+def chat_gpt(prompt: str) -> str:
+    response = requests.post(
+        "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
+        headers={"Authorization": f"Bearer {HF_API_KEY}"},
+        json={"inputs": prompt}
+    )
+    data = response.json()
+    try:
+        return data[0]["generated_text"]
+    except Exception:
+        return "⚠️ No pude generar respuesta en este momento."
+
+# --- Comando /start ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    usuarios[user_id] = {"indice": 0, "correctas": 0}
+    usuarios[user_id] = {"indice": 0, "correctas": 0, "modo_chatgpt": False}
     await update.message.reply_text(
         "👋 ¡Hola! Bienvenido al bot de preguntas V/F.\n"
         "Te propongo responder un breve cuestionario para poner a prueba tus conocimientos."
     )
     await update.message.reply_text(preguntas[0]["texto"])
 
-# Handler para respuestas
+# --- Handler para respuestas ---
 async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     texto = update.message.text.strip().upper()
 
+    # Si el usuario está en modo ChatGPT
+    if user_id in usuarios and usuarios[user_id].get("modo_chatgpt"):
+        respuesta = chat_gpt(update.message.text)
+        await update.message.reply_text(respuesta)
+        return
+
+    # Si el usuario no está registrado, iniciar cuestionario
     if user_id not in usuarios:
-        usuarios[user_id] = {"indice": 0, "correctas": 0}
+        usuarios[user_id] = {"indice": 0, "correctas": 0, "modo_chatgpt": False}
         await update.message.reply_text(preguntas[0]["texto"])
         return
 
@@ -64,21 +87,21 @@ async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
         total = len(preguntas)
         porcentaje = (correctas / total) * 100
         await update.message.reply_text(
-            f"🎉 Terminaste. Puntaje: {porcentaje:.0f}%\nGracias por participar, ¡hasta la próxima!"
+            f"🎉 Terminaste. Puntaje: {porcentaje:.0f}%\n"
+            "Ahora podés hacerme una pregunta sobre metodología de las ciencias sociales."
         )
+        usuarios[user_id]["modo_chatgpt"] = True
 
 # Registrar handlers
 bot_app.add_handler(CommandHandler("start", start))
-bot_app.add_handler(MessageHandler(filters.TEXT, responder))
+bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, responder))
 
 # --- Flask para Render ---
 flask_app = Flask(__name__)
 
 @flask_app.route("/")
 def home():
-    return "Bot de preguntas V/F está corriendo en Render con Webhook."
-
-import asyncio
+    return "Bot de preguntas V/F con Hugging Face está corriendo en Render."
 
 if __name__ == "__main__":
     # Configurar webhook con loop explícito
