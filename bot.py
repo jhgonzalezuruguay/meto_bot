@@ -31,11 +31,12 @@ HF_API_KEY = os.environ.get("HF_API_KEY")  # Hugging Face API Key
 bot_app = ApplicationBuilder().token(TOKEN).build()
 
 # --- Función para consultar Hugging Face ---
-response = requests.post(
-    "https://router.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
-    headers={"Authorization": f"Bearer {HF_API_KEY}"},
-    json={"inputs": prompt}
-)
+def chat_gpt(prompt: str) -> str:
+    response = requests.post(
+        "https://router.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
+        headers={"Authorization": f"Bearer {HF_API_KEY}"},
+        json={"inputs": prompt}
+    )
     data = response.json()
     print("Respuesta HuggingFace:", data)
 
