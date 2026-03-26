@@ -5,7 +5,7 @@ from flask import Flask, request
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
-# --- Preguntas verdadero/falso ---
+# Preguntas V/F
 preguntas = [
     {"texto": "¿Una hipótesis relaciona variables? (V/F)", "respuesta": "V"},
     {"texto": "¿La variable independiente es la causa? (V/F)", "respuesta": "V"},
@@ -23,13 +23,12 @@ preguntas = [
 
 usuarios = {}
 
-# --- Variables de entorno ---
 TOKEN = os.environ["BOT_TOKEN"]
 HF_API_KEY = os.environ.get("HF_API_KEY")
 
 bot_app = ApplicationBuilder().token(TOKEN).build()
 
-# --- Función Hugging Face ---
+# Hugging Face
 def chat_gpt(prompt: str) -> str:
     response = requests.post(
         "https://router.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
@@ -50,14 +49,13 @@ def chat_gpt(prompt: str) -> str:
     else:
         return "⚠️ Respuesta inesperada: " + str(data)
 
-# --- Comando /start ---
+# Handlers
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     usuarios[user_id] = {"indice": 0, "correctas": 0, "modo_chatgpt": False}
     await update.message.reply_text("👋 ¡Hola! Bienvenido al bot de preguntas V/F.")
     await update.message.reply_text(preguntas[0]["texto"])
 
-# --- Handler de respuestas ---
 async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     texto = update.message.text.strip().upper()
@@ -94,17 +92,15 @@ async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         usuarios[user_id]["modo_chatgpt"] = True
 
-# --- Registrar handlers ---
 bot_app.add_handler(CommandHandler("start", start))
 bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, responder))
 
-# --- Flask para Render ---
+# Flask
 flask_app = Flask(__name__)
 
 @flask_app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), bot_app.bot)
-    # Procesa el update directamente en un loop nuevo
     asyncio.run(bot_app.process_update(update))
     return "ok"
 
