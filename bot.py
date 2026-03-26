@@ -111,7 +111,8 @@ flask_app = Flask(__name__)
 @flask_app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), bot_app.bot)
-    bot_app.update_queue.put(update)
+    # Procesa la actualización directamente
+    asyncio.run(bot_app.process_update(update))
     return "ok"
 
 @flask_app.route("/")
