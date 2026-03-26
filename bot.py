@@ -38,10 +38,17 @@ def chat_gpt(prompt: str) -> str:
         json={"inputs": prompt}
     )
     data = response.json()
-    try:
+    print("Respuesta HuggingFace:", data)  # Esto lo ves en los logs de Render
+
+    # Manejo flexible de formatos
+    if isinstance(data, list) and "generated_text" in data[0]:
         return data[0]["generated_text"]
-    except Exception:
-        return "⚠️ No pude generar respuesta en este momento."
+    elif isinstance(data, dict) and "generated_text" in data:
+        return data["generated_text"]
+    elif "error" in data:
+        return f"⚠️ Error HuggingFace: {data['error']}"
+    else:
+        return "⚠️ Respuesta inesperada: " + str(data)
 
 # --- Comando /start ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
