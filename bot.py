@@ -33,14 +33,13 @@ bot_app = ApplicationBuilder().token(TOKEN).build()
 # --- Función para consultar Hugging Face ---
 def chat_gpt(prompt: str) -> str:
     response = requests.post(
-        "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
+        "https://router.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
         headers={"Authorization": f"Bearer {HF_API_KEY}"},
         json={"inputs": prompt}
     )
     data = response.json()
-    print("Respuesta HuggingFace:", data)  # Esto lo ves en los logs de Render
+    print("Respuesta HuggingFace:", data)  # Ver en logs
 
-    # Manejo flexible de formatos
     if isinstance(data, list) and "generated_text" in data[0]:
         return data[0]["generated_text"]
     elif isinstance(data, dict) and "generated_text" in data:
