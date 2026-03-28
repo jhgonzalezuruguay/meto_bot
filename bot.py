@@ -1,6 +1,7 @@
 import os
 import requests
 import asyncio
+import threading
 from flask import Flask, request
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
@@ -96,11 +97,12 @@ async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
 bot_app.add_handler(CommandHandler("start", start))
 bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, responder))
 
-# Crear loop global y mantenerlo abierto
+# Crear loop global y mantenerlo vivo en segundo plano
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 loop.run_until_complete(bot_app.initialize())
 loop.run_until_complete(bot_app.start())
+threading.Thread(target=loop.run_forever, daemon=True).start()
 
 # Flask
 flask_app = Flask(__name__)
@@ -108,7 +110,7 @@ flask_app = Flask(__name__)
 @flask_app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), bot_app.bot)
-    # Usar el loop global para procesar el update
+    # Enviar el update al loop global
     asyncio.run_coroutine_threadsafe(bot_app.process_update(update), loop)
     return "ok"
 
