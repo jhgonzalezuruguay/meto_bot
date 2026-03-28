@@ -101,7 +101,6 @@ bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, responder))
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 loop.run_until_complete(bot_app.initialize())
-loop.run_until_complete(bot_app.start())
 threading.Thread(target=loop.run_forever, daemon=True).start()
 
 # Flask
