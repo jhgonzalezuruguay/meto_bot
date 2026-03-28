@@ -94,15 +94,17 @@ async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 bot_app.add_handler(CommandHandler("start", start))
 bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, responder))
-# Inicializar la aplicación antes de usar process_update
+
+# Inicializar y arrancar la aplicación antes de usar process_update
 asyncio.run(bot_app.initialize())
+asyncio.run(bot_app.start())
+
 # Flask
 flask_app = Flask(__name__)
 
 @flask_app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), bot_app.bot)
-    # Procesa el update directamente en un loop nuevo
     asyncio.run(bot_app.process_update(update))
     return "ok"
 
