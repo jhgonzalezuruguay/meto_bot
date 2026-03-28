@@ -96,8 +96,11 @@ async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
 bot_app.add_handler(CommandHandler("start", start))
 bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, responder))
 
-# Inicializar la aplicación una sola vez
-asyncio.run(bot_app.initialize())
+# Crear loop global y mantenerlo abierto
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
+loop.run_until_complete(bot_app.initialize())
+loop.run_until_complete(bot_app.start())
 
 # Flask
 flask_app = Flask(__name__)
@@ -105,8 +108,8 @@ flask_app = Flask(__name__)
 @flask_app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), bot_app.bot)
-    # Procesar el update en un loop nuevo por request
-    asyncio.run(bot_app.process_update(update))
+    # Usar el loop global para procesar el update
+    asyncio.run_coroutine_threadsafe(bot_app.process_update(update), loop)
     return "ok"
 
 @flask_app.route("/")
