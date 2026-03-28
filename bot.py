@@ -26,6 +26,7 @@ usuarios = {}
 TOKEN = os.environ["BOT_TOKEN"]
 HF_API_KEY = os.environ.get("HF_API_KEY")
 
+# Crear aplicación
 bot_app = ApplicationBuilder().token(TOKEN).build()
 
 # Hugging Face
@@ -95,13 +96,8 @@ async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
 bot_app.add_handler(CommandHandler("start", start))
 bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, responder))
 
-# Crear loop global explícito
-loop = asyncio.new_event_loop()
-asyncio.set_event_loop(loop)
-
-# Inicializar y arrancar la aplicación UNA sola vez
-loop.run_until_complete(bot_app.initialize())
-loop.run_until_complete(bot_app.start())
+# Inicializar la aplicación una sola vez
+asyncio.run(bot_app.initialize())
 
 # Flask
 flask_app = Flask(__name__)
@@ -109,8 +105,8 @@ flask_app = Flask(__name__)
 @flask_app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), bot_app.bot)
-    # Usar el loop global, no crear uno nuevo
-    loop.create_task(bot_app.process_update(update))
+    # Procesar el update en un loop nuevo por request
+    asyncio.run(bot_app.process_update(update))
     return "ok"
 
 @flask_app.route("/")
