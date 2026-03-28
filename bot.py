@@ -94,7 +94,8 @@ async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 bot_app.add_handler(CommandHandler("start", start))
 bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, responder))
-
+# Inicializar la aplicación antes de usar process_update
+asyncio.run(bot_app.initialize())
 # Flask
 flask_app = Flask(__name__)
 
