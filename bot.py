@@ -109,7 +109,6 @@ flask_app = Flask(__name__)
 @flask_app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), bot_app.bot)
-    # Enviar el update al loop global
     asyncio.run_coroutine_threadsafe(bot_app.process_update(update), loop)
     return "ok"
 
