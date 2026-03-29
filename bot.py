@@ -27,7 +27,7 @@ usuarios = {}
 TOKEN = os.environ["BOT_TOKEN"]
 HF_API_KEY = os.environ.get("HF_API_KEY")
 
-# Crear aplicación
+# Crear aplicación de Telegram
 bot_app = ApplicationBuilder().token(TOKEN).build()
 
 # Hugging Face
